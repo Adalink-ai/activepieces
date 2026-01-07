@@ -12,9 +12,10 @@ import { workerPostBoot } from './app/worker'
 
 const start = async (app: FastifyInstance): Promise<void> => {
     try {
+        const port = parseInt(process.env.AP_SERVER_PORT || '3000', 10)
         await app.listen({
             host: '0.0.0.0',
-            port: 3000,
+            port,
         })
         if (system.isWorker()) {
             await workerPostBoot(app)

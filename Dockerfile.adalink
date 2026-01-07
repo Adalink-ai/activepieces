@@ -1,0 +1,128 @@
+# Dockerfile otimizado para ActivePieces com autenticacao Adalink
+# Deploy na AWS Elastic Beanstalk
+
+FROM node:20.19-bullseye-slim AS base
+
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8 \
+    NX_DAEMON=false \
+    NX_NO_CLOUD=true
+
+# Instalar dependencias do sistema
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-client \
+        python3 \
+        g++ \
+        build-essential \
+        git \
+        poppler-utils \
+        poppler-data \
+        procps \
+        locales \
+        locales-all \
+        unzip \
+        curl \
+        ca-certificates \
+        libcap-dev && \
+    yarn config set python /usr/bin/python3
+
+# Instalar bun
+RUN export ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+      curl -fSL https://github.com/oven-sh/bun/releases/download/bun-v1.3.1/bun-linux-x64-baseline.zip -o bun.zip; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+      curl -fSL https://github.com/oven-sh/bun/releases/download/bun-v1.3.1/bun-linux-aarch64.zip -o bun.zip; \
+    fi && \
+    unzip bun.zip && \
+    mv bun-*/bun /usr/local/bin/bun && \
+    chmod +x /usr/local/bin/bun && \
+    rm -rf bun.zip bun-*
+
+# Instalar pacotes npm globais
+RUN --mount=type=cache,target=/root/.npm \
+    npm install -g --no-fund --no-audit \
+    node-gyp \
+    npm@9.9.3 \
+    pm2@6.0.10 \
+    typescript@4.9.4
+
+# Instalar isolated-vm globalmente
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    cd /usr/src && bun install isolated-vm@5.0.1
+
+### STAGE 1: Build ###
+FROM base AS build
+
+WORKDIR /usr/src/app
+
+# Copiar arquivos de dependencia primeiro para cache
+COPY .npmrc package.json bun.lock ./
+
+# Instalar dependencias
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --frozen-lockfile
+
+# Copiar codigo fonte
+COPY . .
+
+# Build
+RUN npx nx run-many --target=build --projects=react-ui,server-api --configuration production --parallel=2 --skip-nx-cache
+
+# Instalar dependencias de producao para API
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    cd dist/packages/server/api && \
+    bun install --production --frozen-lockfile
+
+### STAGE 2: Run ###
+FROM base AS run
+
+WORKDIR /usr/src/app
+
+# Instalar Nginx
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get install -y --no-install-recommends nginx gettext
+
+# Copiar configuracoes estaticas
+COPY nginx.react.conf /etc/nginx/nginx.conf
+COPY --from=build /usr/src/app/packages/server/api/src/assets/default.cf /usr/local/etc/isolate
+COPY docker-entrypoint.sh .
+
+# Criar diretorios necessarios
+RUN mkdir -p \
+    /usr/src/app/dist/packages/server \
+    /usr/src/app/dist/packages/engine \
+    /usr/src/app/dist/packages/shared && \
+    chmod +x docker-entrypoint.sh
+
+# Copiar artefatos buildados
+COPY --from=build /usr/src/app/LICENSE .
+COPY --from=build /usr/src/app/dist/packages/engine/ ./dist/packages/engine/
+COPY --from=build /usr/src/app/dist/packages/server/ ./dist/packages/server/
+COPY --from=build /usr/src/app/dist/packages/shared/ ./dist/packages/shared/
+COPY --from=build /usr/src/app/packages ./packages
+
+# Copiar frontend para Nginx
+COPY --from=build /usr/src/app/dist/packages/react-ui /usr/share/nginx/html/
+
+# Variaveis de ambiente padrao
+ENV NODE_ENV=production
+ENV AP_EDITION=community
+ENV AP_EXECUTION_MODE=UNSANDBOXED
+ENV AP_QUEUE_MODE=MEMORY
+ENV AP_TELEMETRY_ENABLED=false
+
+# Healthcheck para Adalink
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:3000/v1/adalink/health || exit 1
+
+LABEL service=activepieces-adalink
+
+EXPOSE 80
+
+ENTRYPOINT ["./docker-entrypoint.sh"]

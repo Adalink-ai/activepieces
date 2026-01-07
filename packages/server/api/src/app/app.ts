@@ -13,6 +13,7 @@ import { platformAnalyticsModule } from './analytics/platform-analytics.module'
 import { setPlatformOAuthService } from './app-connection/app-connection-service/oauth2'
 import { appConnectionModule } from './app-connection/app-connection.module'
 import { authenticationModule } from './authentication/authentication.module'
+import { adalinkAuthController } from './authentication/adalink'
 import { rateLimitModule } from './core/security/rate-limit'
 import { authenticationMiddleware } from './core/security/v2/authn/authentication-middleware'
 import { authorizationMiddleware } from './core/security/v2/authz/authorization-middleware'
@@ -196,6 +197,7 @@ export const setupApp = async (app: FastifyInstance): Promise<FastifyInstance> =
     await app.register(openapiModule)
     await app.register(appEventRoutingModule)
     await app.register(authenticationModule)
+    await app.register(adalinkAuthController, { prefix: '/v1' })
     await app.register(triggerModule)
     await app.register(platformModule)
     await app.register(humanInputModule)

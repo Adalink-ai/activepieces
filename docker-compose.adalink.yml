@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  activepieces:
+    build:
+      context: .
+      dockerfile: Dockerfile.adalink
+    image: adalink/activepieces:latest
+    container_name: activepieces-adalink
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      # Configuracoes basicas
+      - AP_EDITION=community
+      - AP_EXECUTION_MODE=UNSANDBOXED
+      - AP_QUEUE_MODE=MEMORY
+      - AP_TELEMETRY_ENABLED=false
+      - AP_ENVIRONMENT=prod
+
+      # URLs - Configurar para producao
+      - AP_FRONTEND_URL=${AP_FRONTEND_URL:-http://localhost}
+      - AP_WEBHOOK_TIMEOUT_SECONDS=30
+
+      # Banco de dados PostgreSQL (Amazon RDS)
+      - AP_POSTGRES_DATABASE=${AP_POSTGRES_DATABASE:-activepieces}
+      - AP_POSTGRES_HOST=${AP_POSTGRES_HOST:-postgres}
+      - AP_POSTGRES_PORT=${AP_POSTGRES_PORT:-5432}
+      - AP_POSTGRES_USERNAME=${AP_POSTGRES_USERNAME:-postgres}
+      - AP_POSTGRES_PASSWORD=${AP_POSTGRES_PASSWORD}
+      - AP_POSTGRES_USE_SSL=${AP_POSTGRES_USE_SSL:-true}
+
+      # Redis (ElastiCache) - Opcional para filas
+      - AP_REDIS_URL=${AP_REDIS_URL:-}
+
+      # Seguranca - OBRIGATORIO mudar em producao
+      - AP_ENCRYPTION_KEY=${AP_ENCRYPTION_KEY}
+      - AP_JWT_SECRET=${AP_JWT_SECRET}
+
+      # Adalink JWT Authentication - MESMO secret do front-adalink
+      - ADALINK_JWT_SECRET=${ADALINK_JWT_SECRET}
+
+      # Rate limiting
+      - AP_API_RATE_LIMIT_AUTHN_MAX=50
+      - AP_API_RATE_LIMIT_AUTHN_WINDOW=60000
+
+      # Logs
+      - AP_LOG_LEVEL=${AP_LOG_LEVEL:-info}
+      - AP_LOG_PRETTY=false
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/v1/adalink/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    networks:
+      - activepieces-network
+
+networks:
+  activepieces-network:
+    driver: bridge

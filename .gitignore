@@ -12,6 +12,8 @@ dev
 /cache
 /logs/
 .env
+.env.adalink
+!.env.adalink.example
 
 # SDK Build
 builds
