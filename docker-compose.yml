@@ -11,6 +11,8 @@ services:
       - postgres
       - redis
     env_file: .env
+    environment:
+      - AP_PIECES_SOURCE=CLOUD_AND_DB
     volumes:
       - ./cache:/usr/src/app/cache
     networks:

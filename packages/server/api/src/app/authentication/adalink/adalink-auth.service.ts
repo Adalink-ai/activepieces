@@ -1,4 +1,4 @@
-import { apId, PlatformRole, PrincipalType, ProjectType, UserIdentityProvider } from '@activepieces/shared'
+import { apId, AuthenticationResponse, PlatformRole, PrincipalType, ProjectType, UserIdentityProvider, UserStatus } from '@activepieces/shared'
 import { FastifyBaseLogger } from 'fastify'
 import jwtLibrary from 'jsonwebtoken'
 import { platformService } from '../../platform/platform.service'
@@ -31,12 +31,7 @@ export const adalinkAuthService = (log: FastifyBaseLogger) => ({
         }
     },
 
-    async getOrCreateUserAndProject(payload: AdalinkJwtPayload): Promise<{
-        token: string
-        userId: string
-        projectId: string
-        platformId: string
-    }> {
+    async getOrCreateUserAndProject(payload: AdalinkJwtPayload): Promise<AuthenticationResponse> {
         const { email, name, organizationId, organizationName } = payload
         const [firstName, ...lastNameParts] = name.split(' ')
         const lastName = lastNameParts.join(' ') || firstName
@@ -104,11 +99,21 @@ export const adalinkAuthService = (log: FastifyBaseLogger) => ({
             tokenVersion: identity.tokenVersion,
         })
 
+        // Retornar no formato AuthenticationResponse esperado pelo frontend
         return {
-            token,
-            userId: user.id,
-            projectId: project.id,
+            id: user.id,
+            platformRole: user.platformRole,
+            status: user.status ?? UserStatus.ACTIVE,
+            externalId: user.externalId,
             platformId: platform.id,
+            verified: identity.verified,
+            firstName: identity.firstName,
+            lastName: identity.lastName,
+            email: identity.email,
+            trackEvents: identity.trackEvents,
+            newsLetter: identity.newsLetter,
+            token,
+            projectId: project.id,
         }
     },
 

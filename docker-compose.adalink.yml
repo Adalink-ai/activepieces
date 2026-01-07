@@ -17,6 +17,7 @@ services:
       - AP_QUEUE_MODE=MEMORY
       - AP_TELEMETRY_ENABLED=false
       - AP_ENVIRONMENT=prod
+      - AP_PIECES_SOURCE=CLOUD_AND_DB
 
       # URLs - Configurar para producao
       - AP_FRONTEND_URL=${AP_FRONTEND_URL:-http://localhost}
