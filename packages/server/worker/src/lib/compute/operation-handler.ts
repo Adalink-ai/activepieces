@@ -138,12 +138,15 @@ export const operationHandler = (log: FastifyBaseLogger) => ({
             actionName: operation.actionName,
         }, '[threadEngineRunner#executePieceAction]')
 
+        const pieceMetadata = await pieceWorkerCache(log).getPiece({
+            engineToken,
+            pieceName: operation.pieceName,
+            pieceVersion: operation.pieceVersion,
+            platformId: operation.platformId,
+        })
+
         await executionFiles(log).provision({
-            pieces: [{
-                pieceName: operation.pieceName,
-                pieceVersion: operation.pieceVersion,
-                platformId: operation.platformId,
-            }],
+            pieces: [pieceMetadata],
             codeSteps: [],
         })
 
@@ -262,6 +265,7 @@ function getFlowVersionId(operation: EngineOperation, type: EngineOperationType)
             return (operation as ExecuteTriggerOperation<TriggerHookType>).flowVersion.id
         case EngineOperationType.EXTRACT_PIECE_METADATA:
         case EngineOperationType.EXECUTE_VALIDATE_AUTH:
+        case EngineOperationType.EXECUTE_PIECE_ACTION:
             return undefined
     }
 }

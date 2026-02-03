@@ -73,7 +73,7 @@ export const pieceActionOperation = {
                     engineToken: constants.engineToken,
                 }),
                 output: {
-                    addAttachment: async () => { },
+                    update: async () => { },
                 },
                 flows: createFlowsContext({
                     engineToken: constants.engineToken,
@@ -111,7 +111,7 @@ export const pieceActionOperation = {
                     apiUrl: constants.internalApiUrl,
                     projectId: constants.projectId,
                     engineToken: constants.engineToken,
-                    target: 'actions',
+                    target: 'triggers',
                     contextVersion: piece.getContextInfo?.().version,
                 }),
                 run: {

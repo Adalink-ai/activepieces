@@ -39,6 +39,7 @@ export const jobConsmer = (log: FastifyBaseLogger) => ({
                         case WorkerJobType.EXECUTE_PROPERTY:
                         case WorkerJobType.EXECUTE_VALIDATION:
                         case WorkerJobType.EXECUTE_TRIGGER_HOOK:
+                        case WorkerJobType.EXECUTE_PIECE_ACTION:
                             await userInteractionJobExecutor(log).execute(jobData, engineToken, timeoutInSeconds)
                             span.setAttribute('worker.completed', true)
                             return {
@@ -100,6 +101,7 @@ const getTimeoutForWorkerJob = (jobType: WorkerJobType): number => {
         case WorkerJobType.EXECUTE_PROPERTY:
         case WorkerJobType.EXECUTE_VALIDATION:
         case WorkerJobType.EXECUTE_POLLING:
+        case WorkerJobType.EXECUTE_PIECE_ACTION:
             return dayjs.duration(workerMachine.getSettings().TRIGGER_TIMEOUT_SECONDS, 'seconds').asSeconds()
         case WorkerJobType.EXECUTE_FLOW:
             return dayjs.duration(workerMachine.getSettings().FLOW_TIMEOUT_SECONDS, 'seconds').asSeconds()
