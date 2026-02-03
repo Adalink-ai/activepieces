@@ -2,7 +2,7 @@ import { EngineResponseStatus, ExecuteActionResponse, isNil, WorkerJobType } fro
 import { FastifyBaseLogger } from 'fastify'
 import { OperationResponse } from 'server-worker'
 import { userInteractionWatcher } from '../../workers/user-interaction-watcher'
-import { appConnectionService } from '../../app-connection/app-connection-service'
+import { appConnectionService } from '../../app-connection/app-connection-service/app-connection-service'
 import { pieceMetadataService } from '../metadata/piece-metadata-service'
 
 const DEFAULT_TIMEOUT_SECONDS = 60
@@ -70,7 +70,6 @@ export const pieceExecuteService = (log: FastifyBaseLogger) => ({
                 pieceVersion,
                 actionName,
                 input: resolvedInput,
-                timeoutInSeconds: DEFAULT_TIMEOUT_SECONDS,
             })
 
             if (status !== EngineResponseStatus.OK) {
