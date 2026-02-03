@@ -1,11 +1,10 @@
-import { EngineResponseStatus, ExecuteActionResponse, isNil, WorkerJobType } from '@activepieces/shared'
+import { ActivepiecesError, EngineResponseStatus, ErrorCode, ExecuteActionResponse, isNil, WorkerJobType } from '@activepieces/shared'
 import { FastifyBaseLogger } from 'fastify'
 import { OperationResponse } from 'server-worker'
+import { ArrayContains } from 'typeorm'
 import { userInteractionWatcher } from '../../workers/user-interaction-watcher'
-import { appConnectionService } from '../../app-connection/app-connection-service/app-connection-service'
+import { appConnectionService, appConnectionsRepo } from '../../app-connection/app-connection-service/app-connection-service'
 import { pieceMetadataService } from '../metadata/piece-metadata-service'
-
-const DEFAULT_TIMEOUT_SECONDS = 60
 
 type ExecutePieceActionParams = {
     pieceName: string
@@ -50,10 +49,37 @@ export const pieceExecuteService = (log: FastifyBaseLogger) => ({
         // If connectionId is provided, get the connection value and add to input
         let resolvedInput = { ...input }
         if (!isNil(connectionId)) {
-            const connection = await appConnectionService(log).getOneOrThrow({
+            const encryptedConnection = await appConnectionsRepo().findOneBy({
                 id: connectionId,
-                projectId,
+                projectIds: ArrayContains([projectId]),
+                platformId,
             })
+
+            if (isNil(encryptedConnection)) {
+                throw new ActivepiecesError({
+                    code: ErrorCode.ENTITY_NOT_FOUND,
+                    params: {
+                        entityType: 'AppConnection',
+                        entityId: connectionId,
+                    },
+                })
+            }
+
+            const connection = await appConnectionService(log).decryptAndRefreshConnection(
+                encryptedConnection,
+                projectId,
+                log,
+            )
+
+            if (isNil(connection)) {
+                throw new ActivepiecesError({
+                    code: ErrorCode.INVALID_APP_CONNECTION,
+                    params: {
+                        error: 'Failed to decrypt or refresh connection',
+                    },
+                })
+            }
+
             resolvedInput = {
                 ...resolvedInput,
                 auth: connection.value,
