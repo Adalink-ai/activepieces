@@ -77,3 +77,5 @@ scratch.md
 /blob-report/
 /playwright/.cache/
 /redis-binaries/
+settings.local.json
+nul
