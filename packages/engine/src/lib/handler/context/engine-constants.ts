@@ -1,5 +1,5 @@
 import { ContextVersion } from '@activepieces/pieces-framework'
-import { DEFAULT_MCP_DATA, EngineGenericError, ExecuteFlowOperation, ExecutePropsOptions, ExecuteToolOperation, ExecuteTriggerOperation, ExecutionType, flowStructureUtil, FlowVersionState, PlatformId, ProgressUpdateType, Project, ProjectId, ResumePayload, RunEnvironment, TriggerHookType } from '@activepieces/shared'
+import { DEFAULT_MCP_DATA, EngineGenericError, ExecuteFlowOperation, ExecutePieceActionOperation, ExecutePropsOptions, ExecuteToolOperation, ExecuteTriggerOperation, ExecutionType, flowStructureUtil, FlowVersionState, PlatformId, ProgressUpdateType, Project, ProjectId, ResumePayload, RunEnvironment, TriggerHookType } from '@activepieces/shared'
 import { createPropsResolver, PropsResolver } from '../../variables/props-resolver'
 
 type RetryConstants = {
@@ -151,6 +151,30 @@ export class EngineConstants {
             flowVersionState: DEFAULT_MCP_DATA.flowVersionState,
             triggerPieceName: DEFAULT_MCP_DATA.triggerPieceName,
             flowRunId: DEFAULT_MCP_DATA.flowRunId,
+            publicApiUrl: input.publicApiUrl,
+            internalApiUrl: addTrailingSlashIfMissing(input.internalApiUrl),
+            retryConstants: DEFAULT_RETRY_CONSTANTS,
+            engineToken: input.engineToken,
+            projectId: input.projectId,
+            progressUpdateType: ProgressUpdateType.NONE,
+            serverHandlerId: null,
+            httpRequestId: null,
+            resumePayload: undefined,
+            runEnvironment: undefined,
+            stepNameToTest: undefined,
+            timeoutInSeconds: input.timeoutInSeconds,
+            platformId: input.platformId,
+            stepNames: [],
+        })
+    }
+
+    public static fromExecutePieceActionInput(input: ExecutePieceActionOperation): EngineConstants {
+        return new EngineConstants({
+            flowId: DEFAULT_MCP_DATA.flowId,
+            flowVersionId: DEFAULT_MCP_DATA.flowVersionId,
+            flowVersionState: DEFAULT_MCP_DATA.flowVersionState,
+            triggerPieceName: DEFAULT_MCP_DATA.triggerPieceName,
+            flowRunId: 'direct-piece-execution',
             publicApiUrl: input.publicApiUrl,
             internalApiUrl: addTrailingSlashIfMissing(input.internalApiUrl),
             retryConstants: DEFAULT_RETRY_CONSTANTS,

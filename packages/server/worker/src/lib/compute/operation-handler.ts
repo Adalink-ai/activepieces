@@ -5,7 +5,7 @@ import {
     PropertyType,
 } from '@activepieces/pieces-framework'
 import { webhookSecretsUtils } from '@activepieces/server-shared'
-import { AgentPieceProps, AgentToolType, AI_PIECE_NAME, BeginExecuteFlowOperation, CodeAction, EngineOperation, EngineOperationType, EngineResponseStatus, ExecuteActionResponse, ExecuteExtractPieceMetadataOperation, ExecuteFlowOperation, ExecutePropsOptions, ExecuteToolResponse, ExecuteTriggerOperation, ExecuteTriggerResponse, ExecuteValidateAuthOperation, ExecuteValidateAuthResponse, FlowActionType, flowStructureUtil, FlowTriggerType, FlowVersion, parseToJsonIfPossible, PieceActionSettings, PieceTriggerSettings, ResumeExecuteFlowOperation, TriggerHookType } from '@activepieces/shared'
+import { AgentPieceProps, AgentToolType, AI_PIECE_NAME, BeginExecuteFlowOperation, CodeAction, EngineOperation, EngineOperationType, EngineResponseStatus, ExecuteActionResponse, ExecuteExtractPieceMetadataOperation, ExecuteFlowOperation, ExecutePieceActionOperation, ExecutePropsOptions, ExecuteToolResponse, ExecuteTriggerOperation, ExecuteTriggerResponse, ExecuteValidateAuthOperation, ExecuteValidateAuthResponse, FlowActionType, flowStructureUtil, FlowTriggerType, FlowVersion, parseToJsonIfPossible, PieceActionSettings, PieceTriggerSettings, ResumeExecuteFlowOperation, TriggerHookType } from '@activepieces/shared'
 import { trace } from '@opentelemetry/api'
 import { FastifyBaseLogger } from 'fastify'
 import { CodeArtifact } from '../cache/code-builder'
@@ -130,6 +130,30 @@ export const operationHandler = (log: FastifyBaseLogger) => ({
             engineToken,
         }
         return executeSingleTask(log, input, EngineOperationType.EXECUTE_PROPERTY, operation.timeoutInSeconds)
+    },
+    async executePieceAction(engineToken: string, operation: Omit<ExecutePieceActionOperation, EngineConstants>): Promise<OperationResponse<ExecuteActionResponse>> {
+        log.debug({
+            pieceName: operation.pieceName,
+            pieceVersion: operation.pieceVersion,
+            actionName: operation.actionName,
+        }, '[threadEngineRunner#executePieceAction]')
+
+        await executionFiles(log).provision({
+            pieces: [{
+                pieceName: operation.pieceName,
+                pieceVersion: operation.pieceVersion,
+                platformId: operation.platformId,
+            }],
+            codeSteps: [],
+        })
+
+        const input: ExecutePieceActionOperation = {
+            ...operation,
+            publicApiUrl: workerMachine.getPublicApiUrl(),
+            internalApiUrl: workerMachine.getInternalApiUrl(),
+            engineToken,
+        }
+        return executeSingleTask(log, input, EngineOperationType.EXECUTE_PIECE_ACTION, operation.timeoutInSeconds)
     },
 })
 

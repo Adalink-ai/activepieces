@@ -61,6 +61,17 @@ export const userInteractionJobExecutor = (log: FastifyBaseLogger) => ({
                     timeoutInSeconds,
                 })
                 break
+            case WorkerJobType.EXECUTE_PIECE_ACTION:
+                response = await operationHandler(log).executePieceAction(engineToken, {
+                    platformId: jobData.platformId,
+                    pieceName: jobData.pieceName,
+                    pieceVersion: jobData.pieceVersion,
+                    actionName: jobData.actionName,
+                    input: jobData.input,
+                    projectId: jobData.projectId,
+                    timeoutInSeconds,
+                })
+                break
         }
         await sandboxSockerHandler(log).sendUserInteractionResponse({
             requestId: jobData.requestId,

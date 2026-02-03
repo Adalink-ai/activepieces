@@ -15,6 +15,7 @@ export enum EngineOperationType {
     EXECUTE_PROPERTY = 'EXECUTE_PROPERTY',
     EXECUTE_TRIGGER_HOOK = 'EXECUTE_TRIGGER_HOOK',
     EXECUTE_VALIDATE_AUTH = 'EXECUTE_VALIDATE_AUTH',
+    EXECUTE_PIECE_ACTION = 'EXECUTE_PIECE_ACTION',
 }
 
 export enum TriggerHookType {
@@ -33,6 +34,7 @@ export type EngineOperation =
     | ExecuteTriggerOperation<TriggerHookType>
     | ExecuteExtractPieceMetadataOperation
     | ExecuteValidateAuthOperation
+    | ExecutePieceActionOperation
 
 export const enum EngineSocketEvent {
     ENGINE_RESPONSE = 'engine-response',
@@ -83,6 +85,14 @@ export type ExecuteToolOperation = BaseEngineOperation & {
     pieceVersion: string
     predefinedInput?: PredefinedInputsStructure
     instruction: string
+}
+
+export type ExecutePieceActionOperation = BaseEngineOperation & {
+    actionName: string
+    pieceName: string
+    pieceVersion: string
+    input: Record<string, unknown>
+    connectionId?: string
 }
 
 export type ExecutePropsOptions = BaseEngineOperation & {

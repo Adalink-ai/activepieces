@@ -48,6 +48,7 @@ export function getDefaultJobPriority(job: JobData): keyof typeof JOB_PRIORITY {
         case WorkerJobType.EXECUTE_EXTRACT_PIECE_INFORMATION:
         case WorkerJobType.EXECUTE_VALIDATION:
         case WorkerJobType.EXECUTE_TRIGGER_HOOK:
+        case WorkerJobType.EXECUTE_PIECE_ACTION:
             return 'critical'
     }
 }
@@ -62,6 +63,7 @@ export enum WorkerJobType {
     EXECUTE_TRIGGER_HOOK = 'EXECUTE_TRIGGER_HOOK',
     EXECUTE_PROPERTY = 'EXECUTE_PROPERTY',
     EXECUTE_EXTRACT_PIECE_INFORMATION = 'EXECUTE_EXTRACT_PIECE_INFORMATION',
+    EXECUTE_PIECE_ACTION = 'EXECUTE_PIECE_ACTION',
     EVENT_DESTINATION = 'EVENT_DESTINATION',
 }
 
@@ -72,6 +74,7 @@ export const NON_SCHEDULED_JOB_TYPES: WorkerJobType[] = [
     WorkerJobType.EXECUTE_TRIGGER_HOOK,
     WorkerJobType.EXECUTE_PROPERTY,
     WorkerJobType.EXECUTE_EXTRACT_PIECE_INFORMATION,
+    WorkerJobType.EXECUTE_PIECE_ACTION,
 ] as const
 
 // Never change without increasing LATEST_JOB_DATA_SCHEMA_VERSION, and adding a migration
@@ -194,11 +197,26 @@ export const ExecuteExtractPieceMetadataJobData = Type.Object({
 })
 export type ExecuteExtractPieceMetadataJobData = Static<typeof ExecuteExtractPieceMetadataJobData>
 
+export const ExecutePieceActionJobData = Type.Object({
+    requestId: Type.String(),
+    webserverId: Type.String(),
+    schemaVersion: Type.Number(),
+    jobType: Type.Literal(WorkerJobType.EXECUTE_PIECE_ACTION),
+    projectId: Type.String(),
+    platformId: Type.String(),
+    pieceName: Type.String(),
+    pieceVersion: Type.String(),
+    actionName: Type.String(),
+    input: Type.Record(Type.String(), Type.Unknown()),
+})
+export type ExecutePieceActionJobData = Static<typeof ExecutePieceActionJobData>
+
 export const UserInteractionJobData = Type.Union([
     ExecuteValidateAuthJobData,
     ExecuteTriggerHookJobData,
     ExecutePropertyJobData,
     ExecuteExtractPieceMetadataJobData,
+    ExecutePieceActionJobData,
 ])
 export type UserInteractionJobData = Static<typeof UserInteractionJobData>
 
@@ -207,6 +225,7 @@ export const UserInteractionJobDataWithoutWatchingInformation = Type.Union([
     Type.Omit(ExecuteTriggerHookJobData, ['webserverId', 'requestId', 'schemaVersion']),
     Type.Omit(ExecutePropertyJobData, ['webserverId', 'requestId', 'schemaVersion']),
     Type.Omit(ExecuteExtractPieceMetadataJobData, ['webserverId', 'requestId', 'schemaVersion']),
+    Type.Omit(ExecutePieceActionJobData, ['webserverId', 'requestId', 'schemaVersion']),
 ])
 export type UserInteractionJobDataWithoutWatchingInformation = Static<typeof UserInteractionJobDataWithoutWatchingInformation>
 
