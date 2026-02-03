@@ -65,7 +65,6 @@ export const pieceActionOperation = {
             // Create action context
             const context: ActionContext<PieceAuthProperty, InputPropertyMap> = {
                 executionType: ExecutionType.BEGIN,
-                resumePayload: {},
                 store: createContextStore({
                     apiUrl: constants.internalApiUrl,
                     prefix: '',
