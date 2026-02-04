@@ -18,8 +18,8 @@ const pieceExecuteController: FastifyPluginAsyncTypebox = async (app) => {
         ExecutePieceActionRequest,
         async (req): Promise<ExecuteActionResponse> => {
             const { pieceName, actionName } = req.params
-            const { input, pieceVersion, connectionId } = req.body
-            const projectId = req.projectId
+            const { input, pieceVersion, connectionId, projectId: bodyProjectId } = req.body
+            const projectId = bodyProjectId ?? req.projectId
             const platformId = req.principal.platform.id
 
             return pieceExecuteService(req.log).execute({
@@ -40,6 +40,10 @@ const ExecutePieceActionRequest = {
         security: securityAccess.project(
             [PrincipalType.USER, PrincipalType.SERVICE],
             undefined,
+            {
+                type: ProjectResourceType.BODY,
+                optional: true,
+            },
         ),
     },
     schema: {
@@ -60,6 +64,9 @@ const ExecutePieceActionRequest = {
             input: Type.Optional(Type.Record(Type.String(), Type.Unknown())),
             connectionId: Type.Optional(Type.String({
                 description: 'The connection ID to use for authentication',
+            })),
+            projectId: Type.Optional(Type.String({
+                description: 'The project ID (optional, defaults to the authenticated user\'s project)',
             })),
         }),
         security: [SERVICE_KEY_SECURITY_OPENAPI],
