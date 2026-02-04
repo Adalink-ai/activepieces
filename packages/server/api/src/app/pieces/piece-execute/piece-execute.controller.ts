@@ -40,9 +40,6 @@ const ExecutePieceActionRequest = {
         security: securityAccess.project(
             [PrincipalType.USER, PrincipalType.SERVICE],
             undefined,
-            {
-                type: ProjectResourceType.BODY,
-            },
         ),
     },
     schema: {
