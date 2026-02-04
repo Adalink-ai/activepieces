@@ -39,7 +39,7 @@ const ExecutePieceActionRequest = {
     config: {
         security: securityAccess.project(
             [PrincipalType.USER, PrincipalType.SERVICE],
-            undefined,
+            null,
         ),
     },
     schema: {
