@@ -15,7 +15,7 @@ export const authorizationMiddleware = async (request: FastifyRequest): Promise<
     if (bullmqRoute) {
         return
     }
-    if (security.kind === RouteKind.AUTHENTICATED && security.authorization.type === AuthorizationType.PROJECT) {
+    if (security?.kind === RouteKind.AUTHENTICATED && security?.authorization?.type === AuthorizationType.PROJECT) {
         // @ts-expect-error: explicit override for Fastify typing assignment
         request.projectId = securityAccessRequest.authorization.projectId
     }
