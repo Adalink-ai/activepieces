@@ -14,7 +14,7 @@ export const pieceExecuteModule: FastifyPluginAsyncTypebox = async (app) => {
 
 const pieceExecuteController: FastifyPluginAsyncTypebox = async (app) => {
     app.post(
-        '/:pieceName(.*)/actions/:actionName/execute',
+        '/:pieceName(.+?)/actions/:actionName/execute',
         ExecutePieceActionRequest,
         async (req): Promise<ExecuteActionResponse> => {
             const { pieceName, actionName } = req.params
