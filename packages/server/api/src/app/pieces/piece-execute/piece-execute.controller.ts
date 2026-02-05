@@ -14,13 +14,22 @@ export const pieceExecuteModule: FastifyPluginAsyncTypebox = async (app) => {
 
 const pieceExecuteController: FastifyPluginAsyncTypebox = async (app) => {
     app.post(
-        '/*/actions/*/execute',
+        '/*',
         ExecutePieceActionRequest,
         async (req): Promise<ExecuteActionResponse> => {
-            // Extract pieceName and actionName from wildcard params
-            const wildcards = (req.params as any)['*'] as string[]
-            const pieceName = wildcards[0]
-            const actionName = wildcards[1]
+            // Extract full path from wildcard and parse it
+            // Expected format: /pieceName/actions/actionName/execute
+            const fullPath = (req.params as any)['*'] as string
+
+            // Match pattern: pieceName/actions/actionName/execute
+            const match = fullPath.match(/^(.+?)\/actions\/(.+?)\/execute$/)
+
+            if (!match) {
+                throw new Error(`Invalid path format: ${fullPath}`)
+            }
+
+            const pieceName = match[1]
+            const actionName = match[2]
 
             const { input, pieceVersion, connectionId, projectId: bodyProjectId } = req.body
             const projectId = bodyProjectId ?? req.projectId
