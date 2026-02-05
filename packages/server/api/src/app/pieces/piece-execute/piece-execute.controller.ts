@@ -14,10 +14,14 @@ export const pieceExecuteModule: FastifyPluginAsyncTypebox = async (app) => {
 
 const pieceExecuteController: FastifyPluginAsyncTypebox = async (app) => {
     app.post(
-        '/:pieceName(.+?)/actions/:actionName/execute',
+        '/*/actions/*/execute',
         ExecutePieceActionRequest,
         async (req): Promise<ExecuteActionResponse> => {
-            const { pieceName, actionName } = req.params
+            // Extract pieceName and actionName from wildcard params
+            const wildcards = (req.params as any)['*'] as string[]
+            const pieceName = wildcards[0]
+            const actionName = wildcards[1]
+
             const { input, pieceVersion, connectionId, projectId: bodyProjectId } = req.body
             const projectId = bodyProjectId ?? req.projectId
             const platformId = req.principal.platform.id
