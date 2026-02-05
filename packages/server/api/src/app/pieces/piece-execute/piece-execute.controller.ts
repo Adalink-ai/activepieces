@@ -59,14 +59,6 @@ const ExecutePieceActionRequest = {
     schema: {
         tags: ['pieces'],
         description: 'Execute a piece action directly without a flow',
-        params: Type.Object({
-            pieceName: Type.String({
-                description: 'The name of the piece (e.g., @activepieces/piece-notion)',
-            }),
-            actionName: Type.String({
-                description: 'The name of the action to execute',
-            }),
-        }),
         body: Type.Object({
             pieceVersion: Type.String({
                 description: 'The version of the piece',
